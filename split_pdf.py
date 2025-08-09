@@ -54,7 +54,7 @@ def split_pdf_in_half(input_file, output_prefix="split"):
 # Cách sử dụng
 if __name__ == "__main__":
     # Thay "your_file.pdf" bằng tên file PDF của bạn
-    input_pdf = "Tieng-Anh-English-Discovery-compressed.pdf"
+    input_pdf = "SGK-Tieng-Anh-7-iLearn-Smart-World-compressed.pdf"
     
     # Kiểm tra file có tồn tại không
     if os.path.exists(input_pdf):
