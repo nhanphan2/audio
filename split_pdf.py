@@ -1,9 +1,9 @@
 import os
 from pypdf import PdfReader, PdfWriter
 
-def split_pdf_in_three(input_file, output_prefix="split"):
+def split_pdf_in_two(input_file, output_prefix="split"):
     """
-    Tách file PDF thành 3 phần bằng nhau
+    Tách file PDF thành 2 phần bằng nhau
     
     Args:
         input_file (str): Đường dẫn tới file PDF gốc
@@ -17,15 +17,11 @@ def split_pdf_in_three(input_file, output_prefix="split"):
         print(f"File PDF có {total_pages} trang")
         
         # Tính số trang cho mỗi phần
-        pages_per_part = total_pages // 3
-        remaining_pages = total_pages % 3
+        pages_per_part = total_pages // 2
+        remaining_pages = total_pages % 2
         
-        # Tính chỉ số trang cho từng phần
         # Phần 1: từ 0 đến pages_per_part + (1 nếu có trang dư)
-        part1_end = pages_per_part + (1 if remaining_pages > 0 else 0)
-        
-        # Phần 2: từ part1_end đến part1_end + pages_per_part + (1 nếu còn trang dư)
-        part2_end = part1_end + pages_per_part + (1 if remaining_pages > 1 else 0)
+        part1_end = pages_per_part + remaining_pages
         
         # Phần 1
         writer1 = PdfWriter()
@@ -38,33 +34,22 @@ def split_pdf_in_three(input_file, output_prefix="split"):
         
         # Phần 2
         writer2 = PdfWriter()
-        for i in range(part1_end, part2_end):
+        for i in range(part1_end, total_pages):
             writer2.add_page(reader.pages[i])
             
         output_file2 = f"{output_prefix}_part2.pdf"
         with open(output_file2, 'wb') as output2:
             writer2.write(output2)
-            
-        # Phần 3
-        writer3 = PdfWriter()
-        for i in range(part2_end, total_pages):
-            writer3.add_page(reader.pages[i])
-            
-        output_file3 = f"{output_prefix}_part3.pdf"
-        with open(output_file3, 'wb') as output3:
-            writer3.write(output3)
         
         # Kiểm tra kích thước file
         size1 = os.path.getsize(output_file1)
         size2 = os.path.getsize(output_file2)
-        size3 = os.path.getsize(output_file3)
         original_size = os.path.getsize(input_file)
         
         print(f"File gốc: {original_size/1024:.1f} KB")
         print(f"Phần 1: {size1/1024:.1f} KB - {len(writer1.pages)} trang")
         print(f"Phần 2: {size2/1024:.1f} KB - {len(writer2.pages)} trang")
-        print(f"Phần 3: {size3/1024:.1f} KB - {len(writer3.pages)} trang")
-        print(f"Đã tạo: {output_file1}, {output_file2} và {output_file3}")
+        print(f"Đã tạo: {output_file1} và {output_file2}")
         
     except Exception as e:
         print(f"Lỗi: {e}")
@@ -72,29 +57,29 @@ def split_pdf_in_three(input_file, output_prefix="split"):
 # Cách sử dụng
 if __name__ == "__main__":
     # Thay "your_file.pdf" bằng tên file PDF của bạn
-    input_pdf = "thuvienhoclieu.com-SGK-Ngu-van-9-Canh-dieu-tap-1.pdf"
+    input_pdf = "Lich_su___Dia_li_9_-_Chan_troi_sang_tao_95337-compressed.pdf"
     
     # Kiểm tra file có tồn tại không
     if os.path.exists(input_pdf):
-        split_pdf_in_three(input_pdf, "document")
+        split_pdf_in_two(input_pdf, "document")
     else:
         print(f"Không tìm thấy file: {input_pdf}")
 
-# Phiên bản nâng cao: Tách theo kích thước file thành 3 phần
-def split_pdf_by_size_three(input_file, target_size_kb=14):
+# Phiên bản nâng cao: Tách theo kích thước file thành 2 phần
+def split_pdf_by_size_two(input_file, target_size_kb=14):
     """
-    Tách PDF thành 3 phần dựa trên kích thước mục tiêu (tương đối)
+    Tách PDF thành 2 phần dựa trên kích thước mục tiêu (tương đối)
     """
     reader = PdfReader(input_file)
     total_pages = len(reader.pages)
     original_size = os.path.getsize(input_file)
     
-    # Ước tính số trang cho kích thước mục tiêu (mỗi phần)
+    # Ước tính số trang cho kích thước mục tiêu (phần đầu)
     pages_for_target = int((target_size_kb * 1024 / original_size) * total_pages)
     
-    # Đảm bảo không vượt quá tổng số trang
-    if pages_for_target > total_pages // 3:
-        pages_for_target = total_pages // 3
+    # Đảm bảo không vượt quá tổng số trang và có ít nhất 1 trang cho phần 2
+    if pages_for_target >= total_pages:
+        pages_for_target = total_pages // 2
     
     # Phần 1
     writer1 = PdfWriter()
@@ -103,15 +88,8 @@ def split_pdf_by_size_three(input_file, target_size_kb=14):
     
     # Phần 2
     writer2 = PdfWriter()
-    start_page2 = pages_for_target
-    end_page2 = min(pages_for_target * 2, total_pages)
-    for i in range(start_page2, end_page2):
+    for i in range(pages_for_target, total_pages):
         writer2.add_page(reader.pages[i])
-    
-    # Phần 3
-    writer3 = PdfWriter()
-    for i in range(end_page2, total_pages):
-        writer3.add_page(reader.pages[i])
     
     # Lưu file
     with open("part1_by_size.pdf", 'wb') as f1:
@@ -119,17 +97,13 @@ def split_pdf_by_size_three(input_file, target_size_kb=14):
     
     with open("part2_by_size.pdf", 'wb') as f2:
         writer2.write(f2)
-        
-    with open("part3_by_size.pdf", 'wb') as f3:
-        writer3.write(f3)
     
-    print(f"Đã tách thành 3 phần dựa trên ước tính kích thước {target_size_kb}KB mỗi phần")
+    print(f"Đã tách thành 2 phần dựa trên ước tính kích thước {target_size_kb}KB cho phần đầu")
     print(f"Part 1: {os.path.getsize('part1_by_size.pdf')/1024:.1f}KB - {len(writer1.pages)} trang")
     print(f"Part 2: {os.path.getsize('part2_by_size.pdf')/1024:.1f}KB - {len(writer2.pages)} trang")
-    print(f"Part 3: {os.path.getsize('part3_by_size.pdf')/1024:.1f}KB - {len(writer3.pages)} trang")
 
-# Hàm linh hoạt: Tách PDF thành N phần
-def split_pdf_into_n_parts(input_file, n_parts=3, output_prefix="split"):
+# Hàm linh hoạt: Tách PDF thành N phần (giữ lại để tái sử dụng)
+def split_pdf_into_n_parts(input_file, n_parts=2, output_prefix="split"):
     """
     Tách file PDF thành N phần bằng nhau
     
